@@ -1,0 +1,411 @@
+case class Candidate(name:String,score:Option[Int])
+object ScoreProcessor {
+
+  def passedCandidates(
+                      candidate:Candidate
+                      ):Option[String]={
+    candidate match{
+      case Candidate(name,Some(score)) if score>=60 =>
+        Some(name)
+      case Candidate(name,Some(score)) =>
+        None
+      case Candidate(name,None) =>
+        None
+    }
+  }
+
+  def pendingCandidates(
+                      candidate:Candidate
+                      ):Option[String]={
+    candidate match{
+      case Candidate(name,None) =>
+        Some(name)
+      case _ =>
+          None
+    }
+  }
+
+  def failedCandidates(
+                    candidate:Candidate
+                    ):Option[String]={
+    candidate match{
+      case Candidate(name,Some(score)) if score<60 =>
+        Some(name)
+      case _ =>
+        None
+    }
+  }
+
+  def avgScore(
+              candidate:Candidate
+              ):Option[Int]={
+    candidate match{
+      case Candidate(name,Some(score)) =>
+        Some(score)
+      case _=>
+        None
+    }
+  }
+
+  def main(args:Array[String]):Unit={
+    val candidates = List(
+      Candidate("John", Some(85)),
+      Candidate("David", Some(45)),
+      Candidate("Smith", None),
+      Candidate("Peter", Some(75)),
+      Candidate("Alex", None)
+    )
+    val students_passed = candidates.flatMap(passedCandidates)
+    println(s"Passed Candidates: $students_passed")
+
+    val students_pending = candidates.flatMap(pendingCandidates)
+    println(s"Pending Candidates: $students_pending")
+
+    val students_failed = candidates.flatMap(failedCandidates)
+    println(s"Failed Candidates: $students_failed")
+
+    val scores = candidates.flatMap(avgScore)
+    val averageScore:Float = (scores.sum.toFloat/scores.length)
+    println(s"Average Score: $averageScore")
+
+
+  }
+
+
+
+
+}
+
+
+Passed Candidates: List(John, Peter)
+Pending Candidates: List(Smith, Alex)
+Failed Candidates: List(David)
+Average Score: 68.333336
+
+Process finished with exit code 0
+
+
+
+case class Employe(id:Int,name:String,department:String,salary:Option[Double])
+
+  object EmpSalaryValid {
+
+    def validEmpSal(
+                     emp: Employe
+                   ): Either[String, Double] = {
+      emp match {
+        case Employe(id, name, department, Some(salary)) if salary > 0 =>
+          Right(salary)
+        case Employe(id, name, department, Some(salary)) =>
+          Left("Invalid Salary, Salary should be positive")
+        case Employe(id, name, department, None) =>
+          Left("Salary should not be empty")
+      }
+
+    }
+
+    def avgsal(
+              emp:Employe
+              ):Option[Double]={
+    emp match{
+      case Employe(id,name,department,Some(salary)) if (department == "IT") =>
+            Some(salary)
+      case _ =>
+        None
+    }
+    }
+
+    def main(args: Array[String]): Unit = {
+      val employees = List(
+        Employe(101, "John", "IT", Some(50000)),
+        Employe(102, "David", "HR", Some(30000)),
+        Employe(103, "Smith", "IT", None),
+        Employe(104, "Peter", "Finance", Some(-1000)),
+        Employe(105, "Alex", "IT", Some(70000))
+      )
+
+      val valsal = employees.map(validEmpSal)
+      println(s"Employees Salary Details: $valsal")
+
+      val itemp = employees.filter(emp=>emp.department=="IT")
+      println(s"IT Employess: $itemp")
+
+      val sal = employees.flatMap(avgsal)
+      println(s"Average salary for IT department: ${sal.sum/sal.length}")
+
+
+    }
+
+  }
+
+Employees Salary Details: List(Right(50000.0), Right(30000.0), Left(Salary should not be empty), Left(Invalid Salary, Salary should be positive), Right(70000.0))
+IT Employess: List(Employe(101,John,IT,Some(50000.0)), Employe(103,Smith,IT,None), Employe(105,Alex,IT,Some(70000.0)))
+Average salary for IT department: 60000.0
+
+Process finished with exit code 0
+
+
+
+case class Order(orderId:Int,customerName:String,amount:Option[Double],status:String)
+
+object EOrderProc{
+
+  def valiAmount(
+                ord:Order
+                ):Option[Int]= {
+    ord match {
+      case Order(orderId, customerName, Some(amount), status) if amount >0=>
+        Some(orderId)
+      case _ =>
+        None
+    }
+  }
+
+  def oreCom(
+            ord:Order
+            ):Option[Order]={
+    ord match{
+      case Order(orderId, customerName, Some(amount), status) if status=="COMPLETED" =>
+        Some(Order(orderId, customerName, Some(amount), status))
+      case Order(orderId, customerName, None, status) if status=="COMPLETED" =>
+        Some(Order(orderId, customerName, None, status))
+      case Order(orderId, customerName, Some(amount), status) =>
+        None
+
+    }
+  }
+
+  def totalAmount(
+                 ord:Order
+                 ):Option[Double]={
+          ord match {
+            case Order(orderId, customerName, Some(amount), status) if amount>0 && status=="COMPLETED" =>
+              Some(amount)
+            case _ =>
+              None
+          }
+  }
+
+  def penOrd(
+              ord:Order
+            ):Option[Order]={
+    ord match{
+      case Order(orderId, customerName, Some(amount), status) if status=="PENDING" =>
+        Some(Order(orderId, customerName, Some(amount), status))
+      case Order(orderId, customerName, None, status) if status=="PENDING" =>
+        Some(Order(orderId, customerName, None, status))
+      case _ =>
+        None
+
+    }
+  }
+
+  def valid(
+           ord:Order
+           ):Option[(Int,Double)]={
+    ord match{
+      case Order(orderId, customerName, Some(amount), status)  if amount>0 =>
+        Some((orderId,amount))
+      case _=>
+        None
+    }
+  }
+
+  def main(args:Array[String]):Unit= {
+    val orders = List(
+      Order(1, "John", Some(2500), "COMPLETED"),
+      Order(2, "David", Some(1500), "PENDING"),
+      Order(3, "Smith", None, "COMPLETED"),
+      Order(4, "Peter", Some(-500), "FAILED"),
+      Order(5, "Alex", Some(4000), "COMPLETED")
+    )
+    val valamount = orders.flatMap(valiAmount)
+    println(s"Valid Amount orders: $valamount")
+
+    val comord = orders.map(oreCom)
+    println(s"Comleted orders: $comord")
+
+    val total = orders.flatMap(totalAmount).sum
+    println(s"Total Amount of valid and Completed Orders: $total")
+
+    val pen = orders.flatMap(penOrd)
+    println(s"Pending Orders: $pen")
+
+    val validOrd=orders.flatMap(valid)
+    println(s"Valid Order's Id and Amount: $validOrd")
+
+  }
+
+
+}
+
+
+Valid Amount orders: List(1, 2, 5)
+Comleted orders: List(Some(Order(1,John,Some(2500.0),COMPLETED)), None, Some(Order(3,Smith,None,COMPLETED)), None, Some(Order(5,Alex,Some(4000.0),COMPLETED)))
+Total Amount of valid and Completed Orders: 6500.0
+Pending Orders: List(Order(2,David,Some(1500.0),PENDING))
+Valid Order's Id and Amount: List((1,2500.0), (2,1500.0), (5,4000.0))
+
+Process finished with exit code 0
+
+
+import org.sparkproject.jetty.server.HttpConfiguration.Customizer
+
+case class Customer(id:Option[Int],name:Option[String],age:Option[Int],email:Option[String])
+
+object DataPipeLineVal {
+
+    def validate(
+                cus:Customer
+                ):Option[Customer]={
+      cus match{
+        case Customer(Some(id), Some(name), Some(age), Some(email))
+          if id>0 && (age>=18 && age<=100) && name.nonEmpty && email.contains('@') =>
+              Some(Customer(Some(id),Some(name),Some(age),Some(email)))
+      case _=>
+        None
+      }
+    }
+
+    def main(args:Array[String]):Unit={
+      val infos = List(
+        Customer(Some(101), Some("John"), Some(25), Some("john@gmail.com")),
+        Customer(Some(-102), Some("David"), Some(30), Some("david@yahoo.com")),
+        Customer(Some(103), Some(""), Some(22), Some("smith@gmail.com")),
+        Customer(Some(104), Some("Peter"), Some(18), Some("peter@gmail.com")),
+        Customer(Some(105), Some("Alex"), Some(105), Some("alexgmail.com")),
+        Customer(None, Some("Robert"), Some(35), Some("robert@gmail.com")),
+        Customer(Some(107), None, None, None),
+        Customer(Some(108),Some("Jashu"),Some(15),Some("Jashu@gmail.com"))
+      )
+
+      val validcus=infos.flatMap(validate)
+      println(s"Valid Customer records: $validcus")
+    }
+}
+
+
+Valid Customer records: List(Customer(Some(101),Some(John),Some(25),Some(john@gmail.com)), Customer(Some(104),Some(Peter),Some(18),Some(peter@gmail.com)))
+
+Process finished with exit code 0
+
+
+case class Subject1(name: String, marks: Option[Int])
+case class Student1(id: Int, name: String, Subjects: List[Subject1])
+
+object StdGradeMang {
+
+  def isIncomplete(student: Student1): Boolean = {
+    student match {
+      case Student1(id, name, subjects) =>
+        subjects.exists {
+          case Subject1(subjectName, None) => true
+          case Subject1(subjectName, Some(marks)) => false
+        }
+    }
+  }
+
+  def totalMarks(student: Student1): Either[String, Int] = {
+    student match {
+      case Student1(id, name, subjects) if isIncomplete(student) =>
+        Left("Assessments are incomplete")
+
+      case Student1(id, name, subjects) =>
+        val total = subjects.flatMap {
+          case Subject1(subjectName, Some(marks)) => List(marks)
+          case Subject1(subjectName, None) => List.empty[Int]
+        }.sum
+
+        Right(total)
+    }
+  }
+
+  def isPassed(student: Student1): Boolean = {
+    student match {
+      case Student1(id, name, subjects) =>
+        !isIncomplete(student) &&
+          subjects.forall {
+            case Subject1(subjectName, Some(marks)) => marks >= 40
+            case Subject1(subjectName, None) => false
+          }
+    }
+  }
+
+  def hasDistinction(student: Student1): Boolean = {
+    totalMarks(student) match {
+      case Right(total) =>
+        total.toDouble / student.Subjects.size >= 75
+
+      case Left(error) =>
+        false
+    }
+  }
+
+  def main(args: Array[String]): Unit = {
+
+    val students = List(
+      Student1(101, "Jashu", List(
+        Subject1("Scala", Some(90)),
+        Subject1("SQL", Some(85)),
+        Subject1("Python", Some(95))
+      )),
+      Student1(102, "David", List(
+        Subject1("Scala", Some(60)),
+        Subject1("SQL", Some(70)),
+        Subject1("Python", Some(65))
+      )),
+      Student1(103, "Smith", List(
+        Subject1("Scala", Some(80)),
+        Subject1("SQL", None),
+        Subject1("Python", Some(90))
+      )),
+      Student1(105, "Alex", List(
+        Subject1("Scala", None),
+        Subject1("SQL", Some(80)),
+        Subject1("Python", None)
+      )),
+      Student1(106, "Robert", List(
+        Subject1("Scala", Some(95)),
+        Subject1("SQL", Some(90)),
+        Subject1("Python", Some(85))
+      ))
+    )
+
+    println("STUDENT-WISE TOTAL MARKS")
+    students.foreach { student =>
+      println(student.name + " : " + totalMarks(student))
+    }
+
+    println("\nSTUDENTS WHO PASSED")
+    students.filter(isPassed).foreach(println)
+
+    println("\nINCOMPLETE ASSESSMENTS")
+    students.filter(isIncomplete).foreach(println)
+
+    println("\nSTUDENTS WITH DISTINCTION")
+    students.filter(hasDistinction).foreach(println)
+  }
+}
+
+
+STUDENT-WISE TOTAL MARKS
+Jashu : Right(270)
+David : Right(195)
+Smith : Left(Assessments are incomplete)
+Alex : Left(Assessments are incomplete)
+Robert : Right(270)
+
+STUDENTS WHO PASSED
+Student1(101,Jashu,List(Subject1(Scala,Some(90)), Subject1(SQL,Some(85)), Subject1(Python,Some(95))))
+Student1(102,David,List(Subject1(Scala,Some(60)), Subject1(SQL,Some(70)), Subject1(Python,Some(65))))
+Student1(106,Robert,List(Subject1(Scala,Some(95)), Subject1(SQL,Some(90)), Subject1(Python,Some(85))))
+
+INCOMPLETE ASSESSMENTS
+Student1(103,Smith,List(Subject1(Scala,Some(80)), Subject1(SQL,None), Subject1(Python,Some(90))))
+Student1(105,Alex,List(Subject1(Scala,None), Subject1(SQL,Some(80)), Subject1(Python,None)))
+
+STUDENTS WITH DISTINCTION
+Student1(101,Jashu,List(Subject1(Scala,Some(90)), Subject1(SQL,Some(85)), Subject1(Python,Some(95))))
+Student1(106,Robert,List(Subject1(Scala,Some(95)), Subject1(SQL,Some(90)), Subject1(Python,Some(85))))
+
+Process finished with exit code 0

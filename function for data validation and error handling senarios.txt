@@ -1,0 +1,623 @@
+Microsoft Windows [Version 10.0.19045.6466]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\BRV GOWTHAM>spark-shell
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+26/11/13 10:23:56 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Spark context Web UI available at http://DESKTOP-962FASL.mshome.net:4040
+Spark context available as 'sc' (master = local[*], app id = local-1794545644315).
+Spark session available as 'spark'.
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 3.5.0
+      /_/
+
+Using Scala version 2.12.18 (OpenJDK 64-Bit Server VM, Java 17.0.21)
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala> import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.SparkSession
+
+scala>
+
+scala> import spark.implicits._
+import spark.implicits._
+
+scala> val spark = SparkSession.builder()
+spark: org.apache.spark.sql.SparkSession.Builder = org.apache.spark.sql.SparkSession$Builder@3c0b82f3
+
+scala>   .appName("CustomerOrdersApp")
+res0: org.apache.spark.sql.SparkSession.Builder = org.apache.spark.sql.SparkSession$Builder@3c0b82f3
+
+scala>   .master("local[*]")
+res1: org.apache.spark.sql.SparkSession.Builder = org.apache.spark.sql.SparkSession$Builder@3c0b82f3
+
+scala>   .getOrCreate()
+26/11/13 10:24:46 WARN SparkSession: Using an existing Spark session; only runtime SQL configurations will take effect.
+res2: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@53da3955
+
+scala>
+
+scala> val customers = Seq(
+     |   (1, "Alice Johnson", "New York", "2023-01-15"),
+     |   (2, "Bob Smith", "Chicago", "2023-02-20"),
+     |   (3, "Carol Lee", "New York", "2023-03-10"),
+     |   (4, "David Kim", "Boston", "2023-04-05"),
+     |   (5, "Eva Martinez", "Chicago", "2023-05-12")
+     | ).toDF("customer_id", "name", "city", "signup_date")
+customers: org.apache.spark.sql.DataFrame = [customer_id: int, name: string ... 2 more fields]
+
+scala>
+
+scala>
+
+scala> val orders = Seq(
+     |   (101, 1, "2024-01-10", 250.00, "Completed"),
+     |   (102, 1, "2024-02-15", 180.50, "Completed"),
+     |   (103, 2, "2024-01-20", 99.99, "Cancelled"),
+     |   (104, 3, "2024-03-05", 320.00, "Completed"),
+     |   (105, 3, "2024-03-18", 150.00, "Completed"),
+     |   (106, 4, "2024-04-01", 75.25, "Pending"),
+     |   (107, 1, "2024-04-12", 410.00, "Completed"),
+     |   (108, 5, "2024-05-01", 200.00, "Completed")
+     | ).toDF("order_id", "customer_id", "order_date", "amount", "status")
+orders: org.apache.spark.sql.DataFrame = [order_id: int, customer_id: int ... 3 more fields]
+
+scala>
+
+scala>
+
+scala>
+
+scala> val orderItemsRaw = Seq(
+     |   (101, """[{"product":"Laptop","qty":1,"price":250.0}]"""),
+     |   (102, """[{"product":"Mouse","qty":2,"price":25.0},{"product":"Keyboard","qty":1,"price":130.5}]"""),
+     |   (104, """[{"product":"Monitor","qty":1,"price":320.0}]"""),
+     |   (105, """[{"product":"Headset","qty":3,"price":50.0}]"""),
+     |   (107, """[{"product":"Laptop","qty":1,"price":300.0},{"product":"Mouse","qty":2,"price":55.0}]"""),
+     |   (108, """[{"product":"Chair","qty":1,"price":200.0}]""")
+     | ).toDF("order_id", "items_json")
+orderItemsRaw: org.apache.spark.sql.DataFrame = [order_id: int, items_json: string]
+
+scala>
+
+scala> customers.createOrReplaceTempView("customers")
+
+scala> orders.createOrReplaceTempView("orders")
+
+scala>
+
+scala> orderItemsRaw.createOrReplaceTempView("order_items_raw")
+
+scala>
+     |
+     |
+You typed two blank lines.  Starting a new command.
+
+scala> orderItemsRaw.createOrReplaceTempView("order_items_raw")
+
+scala> spark.sql(""" SELECT * FROM customers """).show()
+<console>:28: error: value sql is not a member of org.apache.spark.sql.SparkSession.Builder
+       spark.sql(""" SELECT * FROM customers """).show()
+             ^
+
+scala> val spark=SparkSession.builder().appName("CustomerOrdersApp").master("local[*]").getOrCreate()
+spark: org.apache.spark.sql.SparkSession = org.apache.spark.sql.SparkSession@53da3955
+
+scala> spark.sql(""" SELECT * FROM customers """).show()
++-----------+-------------+--------+-----------+
+|customer_id|         name|    city|signup_date|
++-----------+-------------+--------+-----------+
+|          1|Alice Johnson|New York| 2023-01-15|
+|          2|    Bob Smith| Chicago| 2023-02-20|
+|          3|    Carol Lee|New York| 2023-03-10|
+|          4|    David Kim|  Boston| 2023-04-05|
+|          5| Eva Martinez| Chicago| 2023-05-12|
++-----------+-------------+--------+-----------+
+
+
+scala> spark.sql("""create or replace temporary view as select order_id, from_json(items_json,'ARRAY<STRUCT<product:String,qty:Int,price:Double>>') as items from order_items_raw""")
+org.apache.spark.sql.catalyst.parser.ParseException:
+[PARSE_SYNTAX_ERROR] Syntax error at or near 'select'.(line 1, pos 36)
+
+== SQL ==
+create or replace temporary view as select order_id, from_json(items_json,'ARRAY<STRUCT<product:String,qty:Int,price:Double>>') as items from order_items_raw
+------------------------------------^^^
+
+  at org.apache.spark.sql.catalyst.parser.ParseException.withCommand(parsers.scala:257)
+  at org.apache.spark.sql.catalyst.parser.AbstractParser.parse(parsers.scala:98)
+  at org.apache.spark.sql.execution.SparkSqlParser.parse(SparkSqlParser.scala:54)
+  at org.apache.spark.sql.catalyst.parser.AbstractSqlParser.parsePlan(AbstractSqlParser.scala:68)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$5(SparkSession.scala:684)
+  at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:138)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$4(SparkSession.scala:683)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:682)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:713)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:744)
+  ... 49 elided
+
+scala> spark.sql("""create or replace temporary view order_items as select order_id, from_json(items_json,'ARRAY<STRUCT<product:String,qty:Int,price:Double>>') as items from order_items_raw""")
+res13: org.apache.spark.sql.DataFrame = []
+
+scala> spark.sql("select * from order_items").show()
++--------+--------------------+
+|order_id|               items|
++--------+--------------------+
+|     101|[{Laptop, 1, 250.0}]|
+|     102|[{Mouse, 2, 25.0}...|
+|     104|[{Monitor, 1, 320...|
+|     105|[{Headset, 3, 50.0}]|
+|     107|[{Laptop, 1, 300....|
+|     108| [{Chair, 1, 200.0}]|
++--------+--------------------+
+
+
+scala> spark.sql("select * from order_items").show(false)
++--------+----------------------------------------+
+|order_id|items                                   |
++--------+----------------------------------------+
+|101     |[{Laptop, 1, 250.0}]                    |
+|102     |[{Mouse, 2, 25.0}, {Keyboard, 1, 130.5}]|
+|104     |[{Monitor, 1, 320.0}]                   |
+|105     |[{Headset, 3, 50.0}]                    |
+|107     |[{Laptop, 1, 300.0}, {Mouse, 2, 55.0}]  |
+|108     |[{Chair, 1, 200.0}]                     |
++--------+----------------------------------------+
+
+
+scala> spark.sql("select order_id,transform(items,x->named_struct('product',x.product,'inline_total',x.qty*x.price)) as
+inline_totals from order_items").show(false)
++--------+----------------------------------+
+|order_id|inline_totals                     |
++--------+----------------------------------+
+|101     |[{Laptop, 250.0}]                 |
+|102     |[{Mouse, 50.0}, {Keyboard, 130.5}]|
+|104     |[{Monitor, 320.0}]                |
+|105     |[{Headset, 150.0}]                |
+|107     |[{Laptop, 300.0}, {Mouse, 110.0}] |
+|108     |[{Chair, 200.0}]                  |
++--------+----------------------------------+
+
+
+scala> spark.sql("select order_id,filter(items,x->x.price>100) as expencive items from order_items").show(false)
+org.apache.spark.sql.catalyst.parser.ParseException:
+[PARSE_SYNTAX_ERROR] Syntax error at or near 'items'.(line 1, pos 58)
+
+== SQL ==
+select order_id,filter(items,x->x.price>100) as expencive items from order_items
+----------------------------------------------------------^^^
+
+  at org.apache.spark.sql.catalyst.parser.ParseException.withCommand(parsers.scala:257)
+  at org.apache.spark.sql.catalyst.parser.AbstractParser.parse(parsers.scala:98)
+  at org.apache.spark.sql.execution.SparkSqlParser.parse(SparkSqlParser.scala:54)
+  at org.apache.spark.sql.catalyst.parser.AbstractSqlParser.parsePlan(AbstractSqlParser.scala:68)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$5(SparkSession.scala:684)
+  at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:138)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$4(SparkSession.scala:683)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:682)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:713)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:744)
+  ... 49 elided
+
+scala> spark.sql("select order_id,filter(items,x->if x.price>100) as expencive items from order_items").show(false)
+org.apache.spark.sql.catalyst.parser.ParseException:
+[PARSE_SYNTAX_ERROR] Syntax error at or near 'x': extra input 'x'.(line 1, pos 35)
+
+== SQL ==
+select order_id,filter(items,x->if x.price>100) as expencive items from order_items
+-----------------------------------^^^
+
+  at org.apache.spark.sql.catalyst.parser.ParseException.withCommand(parsers.scala:257)
+  at org.apache.spark.sql.catalyst.parser.AbstractParser.parse(parsers.scala:98)
+  at org.apache.spark.sql.execution.SparkSqlParser.parse(SparkSqlParser.scala:54)
+  at org.apache.spark.sql.catalyst.parser.AbstractSqlParser.parsePlan(AbstractSqlParser.scala:68)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$5(SparkSession.scala:684)
+  at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:138)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$4(SparkSession.scala:683)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:682)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:713)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:744)
+  ... 49 elided
+
+scala> spark.sql("select order_id,filter(items,x->x.price>100) as expencive_items from order_items").show(false)
++--------+----------------------+
+|order_id|expencive_items       |
++--------+----------------------+
+|101     |[{Laptop, 1, 250.0}]  |
+|102     |[{Keyboard, 1, 130.5}]|
+|104     |[{Monitor, 1, 320.0}] |
+|105     |[]                    |
+|107     |[{Laptop, 1, 300.0}]  |
+|108     |[{Chair, 1, 200.0}]   |
++--------+----------------------+
+
+
+scala> spark.sql("select * from order_items").show(false)
++--------+----------------------------------------+
+|order_id|items                                   |
++--------+----------------------------------------+
+|101     |[{Laptop, 1, 250.0}]                    |
+|102     |[{Mouse, 2, 25.0}, {Keyboard, 1, 130.5}]|
+|104     |[{Monitor, 1, 320.0}]                   |
+|105     |[{Headset, 3, 50.0}]                    |
+|107     |[{Laptop, 1, 300.0}, {Mouse, 2, 55.0}]  |
+|108     |[{Chair, 1, 200.0}]                     |
++--------+----------------------------------------+
+
+
+scala> spark.sql("select order_id, aggregate(items,0,(acc,x)->acc+(x.qty*x.price)) as order_total from order_items").show(false)
+org.apache.spark.sql.catalyst.ExtendedAnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "aggregate(items, 0, lambdafunction((namedlambdavariable() + (namedlambdavariable().qty * namedlambdavariable().price)), namedlambdavariable(), namedlambdavariable()), lambdafunction(namedlambdavariable(), namedlambdavariable()))" due to data type mismatch: Parameter 3 requires the "INT" type, however "lambdafunction((namedlambdavariable() + (namedlambdavariable().qty * namedlambdavariable().price)), namedlambdavariable(), namedlambdavariable())" has the type "DOUBLE".; line 1 pos 17;
+Project [order_id#156, aggregate(items#157, 0, lambdafunction((cast(lambda acc#158 as double) + (cast(lambda x#159.qty as double) * lambda x#159.price)), lambda acc#158, lambda x#159, false), lambdafunction(lambda id#160, lambda id#160, false)) AS order_total#154]
++- SubqueryAlias order_items
+   +- View (`order_items`, [order_id#156,items#157])
+      +- Project [cast(order_id#54 as int) AS order_id#156, cast(items#155 as array<struct<product:string,qty:int,price:double>>) AS items#157]
+         +- Project [order_id#54, from_json(ArrayType(StructType(StructField(product,StringType,true),StructField(qty,IntegerType,true),StructField(price,DoubleType,true)),true), items_json#55, Some(Asia/Calcutta)) AS items#155]
+            +- SubqueryAlias order_items_raw
+               +- View (`order_items_raw`, [order_id#54,items_json#55])
+                  +- Project [_1#49 AS order_id#54, _2#50 AS items_json#55]
+                     +- LocalRelation [_1#49, _2#50]
+
+  at org.apache.spark.sql.catalyst.analysis.package$AnalysisErrorAt.dataTypeMismatch(package.scala:73)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$6(CheckAnalysis.scala:277)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$6$adapted(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:244)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:243)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:243)
+  at scala.collection.Iterator.foreach(Iterator.scala:943)
+  at scala.collection.Iterator.foreach$(Iterator.scala:943)
+  at scala.collection.AbstractIterator.foreach(Iterator.scala:1431)
+  at scala.collection.IterableLike.foreach(IterableLike.scala:74)
+  at scala.collection.IterableLike.foreach$(IterableLike.scala:73)
+  at scala.collection.AbstractIterable.foreach(Iterable.scala:56)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:243)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$5(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$5$adapted(CheckAnalysis.scala:264)
+  at scala.collection.immutable.Stream.foreach(Stream.scala:533)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2$adapted(CheckAnalysis.scala:182)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:244)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0(CheckAnalysis.scala:182)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0$(CheckAnalysis.scala:164)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis0(Analyzer.scala:188)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis(CheckAnalysis.scala:160)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis$(CheckAnalysis.scala:150)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis(Analyzer.scala:188)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:211)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:330)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:208)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$analyzed$1(QueryExecution.scala:77)
+  at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:138)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:219)
+  at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:546)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:219)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:218)
+  at org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:77)
+  at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:74)
+  at org.apache.spark.sql.execution.QueryExecution.assertAnalyzed(QueryExecution.scala:66)
+  at org.apache.spark.sql.Dataset$.$anonfun$ofRows$2(Dataset.scala:99)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:97)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$4(SparkSession.scala:691)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:682)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:713)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:744)
+  ... 49 elided
+
+scala> spark.sql("select order_id, aggregate(items,0.0,(acc,x)->acc+(x.qty*x.price)) as order_total from order_items").show(false)
+org.apache.spark.sql.catalyst.ExtendedAnalysisException: [DATATYPE_MISMATCH.UNEXPECTED_INPUT_TYPE] Cannot resolve "aggregate(items, 0.0, lambdafunction((namedlambdavariable() + (namedlambdavariable().qty * namedlambdavariable().price)), namedlambdavariable(), namedlambdavariable()), lambdafunction(namedlambdavariable(), namedlambdavariable()))" due to data type mismatch: Parameter 3 requires the "DECIMAL(1,1)" type, however "lambdafunction((namedlambdavariable() + (namedlambdavariable().qty * namedlambdavariable().price)), namedlambdavariable(), namedlambdavariable())" has the type "DOUBLE".; line 1 pos 17;
+Project [order_id#163, aggregate(items#164, 0.0, lambdafunction((cast(lambda acc#165 as double) + (cast(lambda x#166.qty as double) * lambda x#166.price)), lambda acc#165, lambda x#166, false), lambdafunction(lambda id#167, lambda id#167, false)) AS order_total#161]
++- SubqueryAlias order_items
+   +- View (`order_items`, [order_id#163,items#164])
+      +- Project [cast(order_id#54 as int) AS order_id#163, cast(items#162 as array<struct<product:string,qty:int,price:double>>) AS items#164]
+         +- Project [order_id#54, from_json(ArrayType(StructType(StructField(product,StringType,true),StructField(qty,IntegerType,true),StructField(price,DoubleType,true)),true), items_json#55, Some(Asia/Calcutta)) AS items#162]
+            +- SubqueryAlias order_items_raw
+               +- View (`order_items_raw`, [order_id#54,items_json#55])
+                  +- Project [_1#49 AS order_id#54, _2#50 AS items_json#55]
+                     +- LocalRelation [_1#49, _2#50]
+
+  at org.apache.spark.sql.catalyst.analysis.package$AnalysisErrorAt.dataTypeMismatch(package.scala:73)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$6(CheckAnalysis.scala:277)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$6$adapted(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:244)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1(TreeNode.scala:243)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.$anonfun$foreachUp$1$adapted(TreeNode.scala:243)
+  at scala.collection.Iterator.foreach(Iterator.scala:943)
+  at scala.collection.Iterator.foreach$(Iterator.scala:943)
+  at scala.collection.AbstractIterator.foreach(Iterator.scala:1431)
+  at scala.collection.IterableLike.foreach(IterableLike.scala:74)
+  at scala.collection.IterableLike.foreach$(IterableLike.scala:73)
+  at scala.collection.AbstractIterable.foreach(Iterable.scala:56)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:243)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$5(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$5$adapted(CheckAnalysis.scala:264)
+  at scala.collection.immutable.Stream.foreach(Stream.scala:533)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2(CheckAnalysis.scala:264)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.$anonfun$checkAnalysis0$2$adapted(CheckAnalysis.scala:182)
+  at org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:244)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0(CheckAnalysis.scala:182)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis0$(CheckAnalysis.scala:164)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis0(Analyzer.scala:188)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis(CheckAnalysis.scala:160)
+  at org.apache.spark.sql.catalyst.analysis.CheckAnalysis.checkAnalysis$(CheckAnalysis.scala:150)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis(Analyzer.scala:188)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.$anonfun$executeAndCheck$1(Analyzer.scala:211)
+  at org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:330)
+  at org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:208)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$analyzed$1(QueryExecution.scala:77)
+  at org.apache.spark.sql.catalyst.QueryPlanningTracker.measurePhase(QueryPlanningTracker.scala:138)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$2(QueryExecution.scala:219)
+  at org.apache.spark.sql.execution.QueryExecution$.withInternalError(QueryExecution.scala:546)
+  at org.apache.spark.sql.execution.QueryExecution.$anonfun$executePhase$1(QueryExecution.scala:219)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.execution.QueryExecution.executePhase(QueryExecution.scala:218)
+  at org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:77)
+  at org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:74)
+  at org.apache.spark.sql.execution.QueryExecution.assertAnalyzed(QueryExecution.scala:66)
+  at org.apache.spark.sql.Dataset$.$anonfun$ofRows$2(Dataset.scala:99)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:97)
+  at org.apache.spark.sql.SparkSession.$anonfun$sql$4(SparkSession.scala:691)
+  at org.apache.spark.sql.SparkSession.withActive(SparkSession.scala:900)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:682)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:713)
+  at org.apache.spark.sql.SparkSession.sql(SparkSession.scala:744)
+  ... 49 elided
+
+scala> spark.sql("select order_id, aggregate(items,cast(0 as double),(acc,x)->acc+(x.qty*x.price)) as order_total from order_items").show(false)
++--------+-----------+
+|order_id|order_total|
++--------+-----------+
+|101     |250.0      |
+|102     |180.5      |
+|104     |320.0      |
+|105     |150.0      |
+|107     |410.0      |
+|108     |200.0      |
++--------+-----------+
+
+
+scala> spark.sql("select * from order_items").shoq()
+<console>:28: error: value shoq is not a member of org.apache.spark.sql.DataFrame
+       spark.sql("select * from order_items").shoq()
+                                              ^
+
+scala> spark.sql("select * from order_items").show()
++--------+--------------------+
+|order_id|               items|
++--------+--------------------+
+|     101|[{Laptop, 1, 250.0}]|
+|     102|[{Mouse, 2, 25.0}...|
+|     104|[{Monitor, 1, 320...|
+|     105|[{Headset, 3, 50.0}]|
+|     107|[{Laptop, 1, 300....|
+|     108| [{Chair, 1, 200.0}]|
++--------+--------------------+
+
+
+scala> spark.sql("select * from order_items").show(false)
++--------+----------------------------------------+
+|order_id|items                                   |
++--------+----------------------------------------+
+|101     |[{Laptop, 1, 250.0}]                    |
+|102     |[{Mouse, 2, 25.0}, {Keyboard, 1, 130.5}]|
+|104     |[{Monitor, 1, 320.0}]                   |
+|105     |[{Headset, 3, 50.0}]                    |
+|107     |[{Laptop, 1, 300.0}, {Mouse, 2, 55.0}]  |
+|108     |[{Chair, 1, 200.0}]                     |
++--------+----------------------------------------+
+
+
+scala> spark.sql("select order_id, aggregate(items,cast(0 as double),(acc,x)->acc+(x.qty*x.price)) as order_total from order_items").show(false)
++--------+-----------+
+|order_id|order_total|
++--------+-----------+
+|101     |250.0      |
+|102     |180.5      |
+|104     |320.0      |
+|105     |150.0      |
+|107     |410.0      |
+|108     |200.0      |
++--------+-----------+
+
+
+scala> case class Candidate(
+     |   name: String,
+     |   score: Option[Int] // stores the candidate's assessment score. Option[Int] means the score may be available or unavailable.  ex Option - Some(85) means Score is available and is 85 , Nonemeans Score is not available
+     | )
+defined class Candidate
+
+scala> def getPassingCandidates(
+     |     candidates: List[Candidate]
+     | ): List[(String, Int)] = {
+     |
+     |   candidates.flatMap {
+     |
+     |     case Candidate(name, Some(score)) if score >= 60 =>
+     |       Some(name -> score)
+     |
+     |     case Candidate(_, Some(score)) =>
+     |       None
+     |
+     |     case Candidate(_, None) =>
+     |       None
+     |   }
+     | }
+getPassingCandidates: (candidates: List[Candidate])List[(String, Int)]
+
+scala> getPassingCandidates(Candidate("Jashu",67))
+<console>:30: error: type mismatch;
+ found   : Int(67)
+ required: Option[Int]
+       getPassingCandidates(Candidate("Jashu",67))
+                                              ^
+
+scala> getPassingCandidates(Candidate("Jashu",some(67)))
+<console>:30: error: type mismatch;
+ found   : Int(67)
+ required: org.apache.spark.sql.Column
+       getPassingCandidates(Candidate("Jashu",some(67)))
+                                                   ^
+
+scala> getPassingCandidates(Candidate("Jashu",Some(67)))
+<console>:30: error: type mismatch;
+ found   : Candidate
+ required: List[Candidate]
+       getPassingCandidates(Candidate("Jashu",Some(67)))
+                                     ^
+
+scala> val c=Candidate("Jashu",Some(67))
+c: Candidate = Candidate(Jashu,Some(67))
+
+scala> getPassingCandidates(c)
+<console>:29: error: type mismatch;
+ found   : Candidate
+ required: List[Candidate]
+       getPassingCandidates(c)
+                            ^
+
+scala> val c1=Candidate("Hema",50)
+<console>:28: error: type mismatch;
+ found   : Int(50)
+ required: Option[Int]
+       val c1=Candidate("Hema",50)
+                               ^
+
+scala> val c1=Candidate("Hema",some(50))
+<console>:28: error: type mismatch;
+ found   : Int(50)
+ required: org.apache.spark.sql.Column
+       val c1=Candidate("Hema",some(50))
+                                    ^
+
+scala> val c1=Candidate("Hema",Some(50))
+c1: Candidate = Candidate(Hema,Some(50))
+
+scala> val l=List(c,c1)
+l: List[Candidate] = List(Candidate(Jashu,Some(67)), Candidate(Hema,Some(50)))
+
+scala> getPassingCandidates(l)
+res32: List[(String, Int)] = List((Jashu,67))
+
+scala> results=getPassingCandidates(l)
+<console>:28: error: not found: value results
+       results=getPassingCandidates(l)
+       ^
+<console>:29: error: not found: value results
+       val $ires9 = results
+                    ^
+
+scala> var results=getPassingCandidates(l)
+results: List[(String, Int)] = List((Jashu,67))
+
+scala> results.foreach(println)
+(Jashu,67)
+
+scala> c2=Candidate("Gowtham",Some(80))
+<console>:28: error: not found: value c2
+       c2=Candidate("Gowtham",Some(80))
+       ^
+<console>:29: error: not found: value c2
+       val $ires10 = c2
+                     ^
+
+scala> val c2=Candidate("Gowtham",Some(80))
+c2: Candidate = Candidate(Gowtham,Some(80))
+
+scala> val l1=l.appended(c2)
+<console>:28: error: value appended is not a member of List[Candidate]
+       val l1=l.appended(c2)
+                ^
+
+scala> val l1=l::appended(c2)
+<console>:28: error: not found: value appended
+       val l1=l::appended(c2)
+                 ^
+
+scala> val l1=l::c2
+<console>:28: error: value :: is not a member of Candidate
+       val l1=l::c2
+               ^
+
+scala> val l1=l+c2
+<console>:28: error: type mismatch;
+ found   : Candidate
+ required: String
+       val l1=l+c2
+                ^
+
+scala> val l1=l:+c2
+l1: List[Candidate] = List(Candidate(Jashu,Some(67)), Candidate(Hema,Some(50)), Candidate(Gowtham,Some(80)))
+
+scala> var results = getPassingCandidates(l1)
+results: List[(String, Int)] = List((Jashu,67), (Gowtham,80))
+
+scala> results.foreach(pritln)
+<console>:28: error: not found: value pritln
+       results.foreach(pritln)
+                       ^
+
+scala> results.foreach(println)
+(Jashu,67)
+(Gowtham,80)
+
+scala> def validateCandidate(
+     |     candidate: Candidate
+     | ): Either[String, Int] = {
+     | candidate match { //Candidate(name, Some(score)) - extracts candidate name and score. Some(score) - confirms that a score exists.
+     |
+     |     case Candidate(name, Some(score)) if score >= 60 =>
+     |       Right(score)
+     |
+     |     case Candidate(name, Some(score)) =>
+     |       Left(s"$name failed with score $score")
+     |
+     |     case Candidate(name, None) =>
+     |       Left(s"$name has no assessment score")
+     |   }
+     | }
+validateCandidate: (candidate: Candidate)Either[String,Int]
+
+scala> var r = validateCandidate(c)
+r: Either[String,Int] = Right(67)
+
+scala> println(validateCandidate(c1))
+Left(Hema failed with score 50)
+
+scala> println(validateCandidate(c2))
+Right(80)
+
+scala> val candidates = List(
+     |   Candidate("John", Some(85)),
+     |   Candidate("David", Some(45)),
+     |   Candidate("Smith", None)
+     | )
+candidates: List[Candidate] = List(Candidate(John,Some(85)), Candidate(David,Some(45)), Candidate(Smith,None))
+
+scala>
+
+scala> val results = candidates.map(validateCandidate)
+results: List[Either[String,Int]] = List(Right(85), Left(David failed with score 45), Left(Smith has no assessment score))
+
+scala>
+
+scala> results.foreach {
+     |   case Right(score) =>
+     |     println(s"Valid score: $score")
+     |
+     |   case Left(error) =>
+     |     println(s"Error: $error")
+     | }
+Valid score: 85
+Error: David failed with score 45
+Error: Smith has no assessment score
+
+scala>

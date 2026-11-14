@@ -1,0 +1,569 @@
+scala> val rawDF = spark.read.text("C:/assessments/orders.json")
+rawDF: org.apache.spark.sql.DataFrame = [value: string]
+scala> rawDF.show(false)
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|value                                                                                                                                                                                                                                                        |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|{"orderId":"O101","orderDate":"2026-11-01","customer":{"id":"C101","name":"Raj","city":"Hyderabad"},"items":[{"product":"Laptop","quantity":1,"price":55000},{"product":"Mouse","quantity":2,"price":500}],"payment":{"mode":"UPI","status":"Success"}}      |
+|{"orderId":"O102","orderDate":"2026-11-02","customer":{"id":"C102","name":"John","city":"Chennai"},"items":[{"product":"Mobile","quantity":1,"price":25000},{"product":"Headphones","quantity":1,"price":2000}],"payment":{"mode":"Card","status":"Success"}}|
+|{"orderId":"O103","orderDate":"2026-11-03","customer":{"id":"C101","name":"Raj","city":"Hyderabad"},"items":[{"product":"Keyboard","quantity":1,"price":1500},{"product":"Mouse","quantity":1,"price":500}],"payment":{"mode":"UPI","status":"Success"}}     |
+|{"orderId":"O104","orderDate":"2026-11-04","customer":{"id":"C103","name":"Priya","city":"Bangalore"},"items":[{"product":"Laptop","quantity":1,"price":60000}],"payment":{"mode":"NetBanking","status":"Pending"}}                                          |
+|{"orderId":"O105","orderDate":"2026-11-05","customer":{"id":"C102","name":"John","city":"Chennai"},"items":[{"product":"Monitor","quantity":2,"price":12000}],"payment":{"mode":"Card","status":"Success"}}                                                  |
+|{"orderId":"O106","orderDate":"2026-11-06","customer":{"id":"C101","name":"Raj","city":"Hyderabad"},"items":[{"product":"Mobile","quantity":1,"price":30000}],"payment":{"mode":"UPI","status":"Success"}}                                                   |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+scala> rawDF.printSchema()
+root
+ |-- value: string (nullable = true)
+
+scala> import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions._
+
+scala> import org.apache.spark.sql.types._
+import org.apache.spark.sql.types._
+
+scala> val customerSchema = StructType(Seq(
+     |   StructField("id", StringType, true),
+     |   StructField("name", StringType, true),
+     |   StructField("city", StringType, true)
+     | ))
+customerSchema: org.apache.spark.sql.types.StructType = StructType(StructField(id,StringType,true),StructField(name,StringType,true),StructField(city,StringType,true))
+
+scala> val itemSchema = StructType(Seq(
+     |   StructField("product", StringType, true),
+     |   StructField("quantity", IntegerType, true),
+     |   StructField("price", DoubleType, true)
+     | ))
+itemSchema: org.apache.spark.sql.types.StructType = StructType(StructField(product,StringType,true),StructField(quantity,IntegerType,true),StructField(price,DoubleType,true))
+
+scala> val paymentSchema = StructType(Seq(
+     |   StructField("mode", StringType, true),
+     |   StructField("status", StringType, true)
+     | ))
+paymentSchema: org.apache.spark.sql.types.StructType = StructType(StructField(mode,StringType,true),StructField(status,StringType,true))
+
+scala> val orderSchema = StructType(Seq(
+     |   StructField("orderId", StringType, true),
+     |   StructField("orderDate", StringType, true),
+     |   StructField("customer", customerSchema, true),
+     |   StructField("items", ArrayType(itemSchema), true),
+     |   StructField("payment", paymentSchema, true)
+     | ))
+orderSchema: org.apache.spark.sql.types.StructType = StructType(StructField(orderId,StringType,true),StructField(orderDate,StringType,true),StructField(customer,StructType(StructField(id,StringType,true),StructField(name,StringType,true),StructField(city,StringType,true)),true),StructField(items,ArrayType(StructType(StructField(product,StringType,true),StructField(quantity,IntegerType,true),StructField(price,DoubleType,true)),true),true),StructField(payment,StructType(StructField(mode,StringType,true),StructField(status,StringType,true)),true))
+
+scala> orderSchema.printTreeString()
+root
+ |-- orderId: string (nullable = true)
+ |-- orderDate: string (nullable = true)
+ |-- customer: struct (nullable = true)
+ |    |-- id: string (nullable = true)
+ |    |-- name: string (nullable = true)
+ |    |-- city: string (nullable = true)
+ |-- items: array (nullable = true)
+ |    |-- element: struct (containsNull = true)
+ |    |    |-- product: string (nullable = true)
+ |    |    |-- quantity: integer (nullable = true)
+ |    |    |-- price: double (nullable = true)
+ |-- payment: struct (nullable = true)
+ |    |-- mode: string (nullable = true)
+ |    |-- status: string (nullable = true)
+
+
+
+scala> val parsedDF = rawDF.select(
+     |   from_json(col("value"), orderSchema).alias("order")
+     | )
+parsedDF: org.apache.spark.sql.DataFrame = [order: struct<orderId: string, orderDate: string ... 3 more fields>]
+
+scala> parsedDF.printSchema()
+root
+ |-- order: struct (nullable = true)
+ |    |-- orderId: string (nullable = true)
+ |    |-- orderDate: string (nullable = true)
+ |    |-- customer: struct (nullable = true)
+ |    |    |-- id: string (nullable = true)
+ |    |    |-- name: string (nullable = true)
+ |    |    |-- city: string (nullable = true)
+ |    |-- items: array (nullable = true)
+ |    |    |-- element: struct (containsNull = true)
+ |    |    |    |-- product: string (nullable = true)
+ |    |    |    |-- quantity: integer (nullable = true)
+ |    |    |    |-- price: double (nullable = true)
+ |    |-- payment: struct (nullable = true)
+ |    |    |-- mode: string (nullable = true)
+ |    |    |-- status: string (nullable = true)
+
+
+scala> parsedDF.show(false)
++-----------------------------------------------------------------------------------------------------------+
+|order                                                                                                      |
++-----------------------------------------------------------------------------------------------------------+
+|{O101, 2026-11-01, {C101, Raj, Hyderabad}, [{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}], {UPI, Success}}      |
+|{O102, 2026-11-02, {C102, John, Chennai}, [{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}], {Card, Success}}|
+|{O103, 2026-11-03, {C101, Raj, Hyderabad}, [{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}], {UPI, Success}}     |
+|{O104, 2026-11-04, {C103, Priya, Bangalore}, [{Laptop, 1, 60000.0}], {NetBanking, Pending}}                |
+|{O105, 2026-11-05, {C102, John, Chennai}, [{Monitor, 2, 12000.0}], {Card, Success}}                        |
+|{O106, 2026-11-06, {C101, Raj, Hyderabad}, [{Mobile, 1, 30000.0}], {UPI, Success}}                         |
++-----------------------------------------------------------------------------------------------------------+
+
+
+scala> val ordersDF = parsedDF.select(
+     |
+     |   col("order.orderId").alias("orderId"),
+     |
+     |   col("order.orderDate").alias("orderDate"),
+     |
+     |   col("order.customer.id").alias("customerId"),
+     |
+     |   col("order.customer.name").alias("customerName"),
+     |
+     |   col("order.customer.city").alias("city"),
+     |
+     |   col("order.items").alias("items"),
+     |
+     |   col("order.payment.mode").alias("paymentMode"),
+     |
+     |   col("order.payment.status").alias("paymentStatus")
+     |
+     | )
+ordersDF: org.apache.spark.sql.DataFrame = [orderId: string, orderDate: string ... 6 more fields]
+
+scala> ordersDF.show(false)
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|orderId|orderDate |customerId|customerName|city     |items                                          |paymentMode|paymentStatus|
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |UPI        |Success      |
+|O102   |2026-11-02|C102      |John        |Chennai  |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|Card       |Success      |
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |UPI        |Success      |
+|O104   |2026-11-04|C103      |Priya       |Bangalore|[{Laptop, 1, 60000.0}]                         |NetBanking |Pending      |
+|O105   |2026-11-05|C102      |John        |Chennai  |[{Monitor, 2, 12000.0}]                        |Card       |Success      |
+|O106   |2026-11-06|C101      |Raj         |Hyderabad|[{Mobile, 1, 30000.0}]                         |UPI        |Success      |
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+
+scala> ordersDF.select("orderId", "items").show(false)
++-------+-----------------------------------------------+
+|orderId|items                                          |
++-------+-----------------------------------------------+
+|O101   |[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |
+|O102   |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|
+|O103   |[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |
+|O104   |[{Laptop, 1, 60000.0}]                         |
+|O105   |[{Monitor, 2, 12000.0}]                        |
+|O106   |[{Mobile, 1, 30000.0}]                         |
++-------+-----------------------------------------------+
+
+scala> val explodedDF = ordersDF.withColumn(
+     |   "item",
+     |   explode(col("items"))
+     | )
+explodedDF: org.apache.spark.sql.DataFrame = [orderId: string, orderDate: string ... 7 more fields]
+
+scala> explodedDF.show(false)
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+-----------------------+
+|orderId|orderDate |customerId|customerName|city     |items                                          |paymentMode|paymentStatus|item                   |
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+-----------------------+
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |UPI        |Success      |{Laptop, 1, 55000.0}   |
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |UPI        |Success      |{Mouse, 2, 500.0}      |
+|O102   |2026-11-02|C102      |John        |Chennai  |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|Card       |Success      |{Mobile, 1, 25000.0}   |
+|O102   |2026-11-02|C102      |John        |Chennai  |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|Card       |Success      |{Headphones, 1, 2000.0}|
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |UPI        |Success      |{Keyboard, 1, 1500.0}  |
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |UPI        |Success      |{Mouse, 1, 500.0}      |
+|O104   |2026-11-04|C103      |Priya       |Bangalore|[{Laptop, 1, 60000.0}]                         |NetBanking |Pending      |{Laptop, 1, 60000.0}   |
+|O105   |2026-11-05|C102      |John        |Chennai  |[{Monitor, 2, 12000.0}]                        |Card       |Success      |{Monitor, 2, 12000.0}  |
+|O106   |2026-11-06|C101      |Raj         |Hyderabad|[{Mobile, 1, 30000.0}]                         |UPI        |Success      |{Mobile, 1, 30000.0}   |
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+-----------------------+
+
+
+scala> val productsDF = explodedDF.select(
+     |   col("orderId"),
+     |   col("customerId"),
+     |   col("customerName"),
+     |   col("city"),
+     |   col("orderDate"),
+     |   col("item.product").alias("product"),
+     |   col("item.quantity").alias("quantity"),
+     |   col("item.price").alias("price"),
+     |   col("paymentStatus")
+     | )
+productsDF: org.apache.spark.sql.DataFrame = [orderId: string, customerId: string ... 7 more fields]
+
+scala> val productAmountDF = productsDF.withColumn(
+     |   "product_amount",
+     |   col("quantity") * col("price")
+     | )
+productAmountDF: org.apache.spark.sql.DataFrame = [orderId: string, customerId: string ... 8 more fields]
+
+scala> productAmountDF.show(false)
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|orderId|customerId|customerName|city     |orderDate |product   |quantity|price  |paymentStatus|product_amount|
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Laptop    |1       |55000.0|Success      |55000.0       |
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Mouse     |2       |500.0  |Success      |1000.0        |
+|O102   |C102      |John        |Chennai  |2026-11-02|Mobile    |1       |25000.0|Success      |25000.0       |
+|O102   |C102      |John        |Chennai  |2026-11-02|Headphones|1       |2000.0 |Success      |2000.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Keyboard  |1       |1500.0 |Success      |1500.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Mouse     |1       |500.0  |Success      |500.0         |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|Laptop    |1       |60000.0|Pending      |60000.0       |
+|O105   |C102      |John        |Chennai  |2026-11-05|Monitor   |2       |12000.0|Success      |24000.0       |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|Mobile    |1       |30000.0|Success      |30000.0       |
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+
+scala> val productSalesDF = productAmountDF
+productSalesDF: org.apache.spark.sql.DataFrame = [orderId: string, customerId: string ... 8 more fields]
+
+scala>   .groupBy("product")
+res49: org.apache.spark.sql.RelationalGroupedDataset = RelationalGroupedDataset: [grouping expressions: [product: string], value: [orderId: string, customerId: string ... 8 more fields], type: GroupBy]
+
+scala>   .agg(
+     |     sum("product_amount").alias("total_sales")
+     |   )
+res50: org.apache.spark.sql.DataFrame = [product: string, total_sales: double]
+
+scala> productSalesDF.show(false)
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|orderId|customerId|customerName|city     |orderDate |product   |quantity|price  |paymentStatus|product_amount|
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Laptop    |1       |55000.0|Success      |55000.0       |
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Mouse     |2       |500.0  |Success      |1000.0        |
+|O102   |C102      |John        |Chennai  |2026-11-02|Mobile    |1       |25000.0|Success      |25000.0       |
+|O102   |C102      |John        |Chennai  |2026-11-02|Headphones|1       |2000.0 |Success      |2000.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Keyboard  |1       |1500.0 |Success      |1500.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Mouse     |1       |500.0  |Success      |500.0         |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|Laptop    |1       |60000.0|Pending      |60000.0       |
+|O105   |C102      |John        |Chennai  |2026-11-05|Monitor   |2       |12000.0|Success      |24000.0       |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|Mobile    |1       |30000.0|Success      |30000.0       |
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+
+scala> val orderTotalDF = productAmountDF
+orderTotalDF: org.apache.spark.sql.DataFrame = [orderId: string, customerId: string ... 8 more fields]
+
+scala>   .groupBy("orderId")
+res52: org.apache.spark.sql.RelationalGroupedDataset = RelationalGroupedDataset: [grouping expressions: [orderId: string], value: [orderId: string, customerId: string ... 8 more fields], type: GroupBy]
+
+scala>   .agg(
+     |     sum("product_amount").alias("order_total")
+     |   )
+res53: org.apache.spark.sql.DataFrame = [orderId: string, order_total: double]
+
+scala>   .orderBy("orderId")
+res54: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row] = [orderId: string, order_total: double]
+
+scala> orderTotalDF.show(false)
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|orderId|customerId|customerName|city     |orderDate |product   |quantity|price  |paymentStatus|product_amount|
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Laptop    |1       |55000.0|Success      |55000.0       |
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Mouse     |2       |500.0  |Success      |1000.0        |
+|O102   |C102      |John        |Chennai  |2026-11-02|Mobile    |1       |25000.0|Success      |25000.0       |
+|O102   |C102      |John        |Chennai  |2026-11-02|Headphones|1       |2000.0 |Success      |2000.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Keyboard  |1       |1500.0 |Success      |1500.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Mouse     |1       |500.0  |Success      |500.0         |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|Laptop    |1       |60000.0|Pending      |60000.0       |
+|O105   |C102      |John        |Chennai  |2026-11-05|Monitor   |2       |12000.0|Success      |24000.0       |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|Mobile    |1       |30000.0|Success      |30000.0       |
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+
+scala> ordersDF.createOrReplaceTempView("orders_view")
+
+scala> productAmountDF.createOrReplaceTempView("products_view")
+
+scala> spark.sql("SELECT * FROM orders_view").show(false)
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|orderId|orderDate |customerId|customerName|city     |items                                          |paymentMode|paymentStatus|
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |UPI        |Success      |
+|O102   |2026-11-02|C102      |John        |Chennai  |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|Card       |Success      |
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |UPI        |Success      |
+|O104   |2026-11-04|C103      |Priya       |Bangalore|[{Laptop, 1, 60000.0}]                         |NetBanking |Pending      |
+|O105   |2026-11-05|C102      |John        |Chennai  |[{Monitor, 2, 12000.0}]                        |Card       |Success      |
+|O106   |2026-11-06|C101      |Raj         |Hyderabad|[{Mobile, 1, 30000.0}]                         |UPI        |Success      |
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+
+
+scala> spark.sql("SELECT * FROM products_view").show(false)
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|orderId|customerId|customerName|city     |orderDate |product   |quantity|price  |paymentStatus|product_amount|
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Laptop    |1       |55000.0|Success      |55000.0       |
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|Mouse     |2       |500.0  |Success      |1000.0        |
+|O102   |C102      |John        |Chennai  |2026-11-02|Mobile    |1       |25000.0|Success      |25000.0       |
+|O102   |C102      |John        |Chennai  |2026-11-02|Headphones|1       |2000.0 |Success      |2000.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Keyboard  |1       |1500.0 |Success      |1500.0        |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|Mouse     |1       |500.0  |Success      |500.0         |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|Laptop    |1       |60000.0|Pending      |60000.0       |
+|O105   |C102      |John        |Chennai  |2026-11-05|Monitor   |2       |12000.0|Success      |24000.0       |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|Mobile    |1       |30000.0|Success      |30000.0       |
++-------+----------+------------+---------+----------+----------+--------+-------+-------------+--------------+
+
+scala> spark.sql("""
+     |   SELECT *
+     |   FROM orders_view
+     |   WHERE city = 'Hyderabad'
+     | """).show(false)
++-------+----------+----------+------------+---------+------------------------------------------+-----------+-------------+
+|orderId|orderDate |customerId|customerName|city     |items                                     |paymentMode|paymentStatus|
++-------+----------+----------+------------+---------+------------------------------------------+-----------+-------------+
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}] |UPI        |Success      |
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]|UPI        |Success      |
+|O106   |2026-11-06|C101      |Raj         |Hyderabad|[{Mobile, 1, 30000.0}]                    |UPI        |Success      |
++-------+----------+----------+------------+---------+------------------------------------------+-----------+-------------+
+
+
+scala> spark.sql("""
+     |   SELECT *
+     |   FROM orders_view
+     |   WHERE paymentStatus = 'Success'
+     | """).show(false)
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|orderId|orderDate |customerId|customerName|city     |items                                          |paymentMode|paymentStatus|
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+|O101   |2026-11-01|C101      |Raj         |Hyderabad|[{Laptop, 1, 55000.0}, {Mouse, 2, 500.0}]      |UPI        |Success      |
+|O102   |2026-11-02|C102      |John        |Chennai  |[{Mobile, 1, 25000.0}, {Headphones, 1, 2000.0}]|Card       |Success      |
+|O103   |2026-11-03|C101      |Raj         |Hyderabad|[{Keyboard, 1, 1500.0}, {Mouse, 1, 500.0}]     |UPI        |Success      |
+|O105   |2026-11-05|C102      |John        |Chennai  |[{Monitor, 2, 12000.0}]                        |Card       |Success      |
+|O106   |2026-11-06|C101      |Raj         |Hyderabad|[{Mobile, 1, 30000.0}]                         |UPI        |Success      |
++-------+----------+----------+------------+---------+-----------------------------------------------+-----------+-------------+
+
+
+scala> spark.sql("""
+     |   SELECT orderId, product, quantity, price
+     |   FROM products_view
+     |   WHERE price > 10000
+     | """).show(false)
++-------+-------+--------+-------+
+|orderId|product|quantity|price  |
++-------+-------+--------+-------+
+|O101   |Laptop |1       |55000.0|
+|O102   |Mobile |1       |25000.0|
+|O104   |Laptop |1       |60000.0|
+|O105   |Monitor|2       |12000.0|
+|O106   |Mobile |1       |30000.0|
++-------+-------+--------+-------+
+
+
+scala> spark.sql("""
+     |   SELECT
+     |     customerId,
+     |     customerName,
+     |     SUM(product_amount) AS total_spending
+     |   FROM products_view
+     |   GROUP BY customerId, customerName
+     |   ORDER BY total_spending DESC
+     | """).show(false)
++----------+------------+--------------+
+|customerId|customerName|total_spending|
++----------+------------+--------------+
+|C101      |Raj         |88000.0       |
+|C103      |Priya       |60000.0       |
+|C102      |John        |51000.0       |
++----------+------------+--------------+
+
+scala> val customerOrdersDF = spark.sql("""
+     |   SELECT
+     |     o.orderId,
+     |     o.customerId,
+     |     o.customerName,
+     |     o.city,
+     |     o.orderDate,
+     |     t.order_total
+     |   FROM orders_view o
+     |   JOIN (
+     |     SELECT orderId, SUM(product_amount) AS order_total
+     |     FROM products_view
+     |     GROUP BY orderId
+     |   ) t
+     |   ON o.orderId = t.orderId
+     | """)
+customerOrdersDF: org.apache.spark.sql.DataFrame = [orderId: string, customerId: string ... 4 more fields]
+
+scala> customerOrdersDF.show(false)
++-------+----------+------------+---------+----------+-----------+
+|orderId|customerId|customerName|city     |orderDate |order_total|
++-------+----------+------------+---------+----------+-----------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|56000.0    |
+|O102   |C102      |John        |Chennai  |2026-11-02|27000.0    |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|2000.0     |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|60000.0    |
+|O105   |C102      |John        |Chennai  |2026-11-05|24000.0    |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|30000.0    |
++-------+----------+------------+---------+----------+-----------+
+
+scala> ROW_NUMBER() OVER (
+     |   PARTITION BY column
+     |   ORDER BY column DESC
+     | )
+<console>:33: error: not found: value ROW_NUMBER
+       ROW_NUMBER() OVER (
+       ^
+<console>:34: error: not found: value PARTITION
+         PARTITION BY column
+         ^
+<console>:34: error: missing argument list for method column in object functions
+Unapplied methods are only converted to functions when a function type is expected.
+You can make this conversion explicit by writing `column _` or `column(_)` instead of `column`.
+         PARTITION BY column
+                      ^
+<console>:35: error: not found: value BY
+         ORDER BY column DESC
+               ^
+<console>:35: error: not found: value DESC
+         ORDER BY column DESC
+                         ^
+
+scala> customerOrdersDF.createOrReplaceTempView("customer_orders_view")
+
+scala>
+
+scala> spark.sql("""
+     |   SELECT *,
+     |     ROW_NUMBER() OVER (
+     |       PARTITION BY customerId
+     |       ORDER BY orderDate DESC
+     |     ) AS rn
+     |   FROM customer_orders_view
+     | """).show(false)
++-------+----------+------------+---------+----------+-----------+---+
+|orderId|customerId|customerName|city     |orderDate |order_total|rn |
++-------+----------+------------+---------+----------+-----------+---+
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|30000.0    |1  |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|2000.0     |2  |
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|56000.0    |3  |
+|O105   |C102      |John        |Chennai  |2026-11-05|24000.0    |1  |
+|O102   |C102      |John        |Chennai  |2026-11-02|27000.0    |2  |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|60000.0    |1  |
++-------+----------+------------+---------+----------+-----------+---+
+
+scala> spark.sql("""
+     |   SELECT *
+     |   FROM (
+     |     SELECT *,
+     |       ROW_NUMBER() OVER (
+     |         PARTITION BY customerId
+     |         ORDER BY orderDate DESC
+     |       ) AS rn
+     |     FROM customer_orders_view
+     |   )
+     |   WHERE rn = 1
+     | """).show(false)
++-------+----------+------------+---------+----------+-----------+---+
+|orderId|customerId|customerName|city     |orderDate |order_total|rn |
++-------+----------+------------+---------+----------+-----------+---+
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|30000.0    |1  |
+|O105   |C102      |John        |Chennai  |2026-11-05|24000.0    |1  |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|60000.0    |1  |
++-------+----------+------------+---------+----------+-----------+---+
+
+
+scala> spark.sql("""
+     |   SELECT *,
+     |     RANK() OVER (
+     |       PARTITION BY customerId
+     |       ORDER BY order_total DESC
+     |     ) AS order_rank
+     |   FROM customer_orders_view
+     |   ORDER BY customerId, order_rank
+     | """).show(false)
++-------+----------+------------+---------+----------+-----------+----------+
+|orderId|customerId|customerName|city     |orderDate |order_total|order_rank|
++-------+----------+------------+---------+----------+-----------+----------+
+|O101   |C101      |Raj         |Hyderabad|2026-11-01|56000.0    |1         |
+|O106   |C101      |Raj         |Hyderabad|2026-11-06|30000.0    |2         |
+|O103   |C101      |Raj         |Hyderabad|2026-11-03|2000.0     |3         |
+|O102   |C102      |John        |Chennai  |2026-11-02|27000.0    |1         |
+|O105   |C102      |John        |Chennai  |2026-11-05|24000.0    |2         |
+|O104   |C103      |Priya       |Bangalore|2026-11-04|60000.0    |1         |
++-------+----------+------------+---------+----------+-----------+----------+
+
+scala> val productSalesDF3 = productAmountDF.groupBy("product").agg(sum("product_amount").alias("total_sales"))
+productSalesDF3: org.apache.spark.sql.DataFrame = [product: string, total_sales: double]
+
+scala> productSalesDF3.show(false)
++----------+-----------+
+|product   |total_sales|
++----------+-----------+
+|Laptop    |115000.0   |
+|Mouse     |1500.0     |
+|Mobile    |55000.0    |
+|Keyboard  |1500.0     |
+|Monitor   |24000.0    |
+|Headphones|2000.0     |
++----------+-----------+
+
+
+scala> productSalesDF3.createOrReplaceTempView("product_sales_view")
+
+scala> spark.sql("""
+     | SELECT *,
+     | DENSE_RANK() OVER (
+     |     ORDER BY total_sales DESC
+     | ) AS sales_rank
+     | FROM product_sales_view
+     | """).show(false)
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
+26/11/13 17:55:22 WARN WindowExec: No Partition Defined for Window operation! Moving all data to a single partition, this can cause serious performance degradation.
++----------+-----------+----------+
+|product   |total_sales|sales_rank|
++----------+-----------+----------+
+|Laptop    |115000.0   |1         |
+|Mobile    |55000.0    |2         |
+|Monitor   |24000.0    |3         |
+|Headphones|2000.0     |4         |
+|Mouse     |1500.0     |5         |
+|Keyboard  |1500.0     |5         |
++----------+-----------+----------+
+
+scala> spark.sql("""
+     | SELECT
+     |     orderId,
+     |     customerId,
+     |     customerName,
+     |     orderDate,
+     |     order_total,
+     |     SUM(order_total) OVER (
+     |         PARTITION BY customerId
+     |         ORDER BY orderDate
+     |         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+     |     ) AS running_total
+     | FROM customer_orders_view
+     | ORDER BY customerId, orderDate
+     | """).show(false)
++-------+----------+------------+----------+-----------+-------------+
+|orderId|customerId|customerName|orderDate |order_total|running_total|
++-------+----------+------------+----------+-----------+-------------+
+|O101   |C101      |Raj         |2026-11-01|56000.0    |56000.0      |
+|O103   |C101      |Raj         |2026-11-03|2000.0     |58000.0      |
+|O106   |C101      |Raj         |2026-11-06|30000.0    |88000.0      |
+|O102   |C102      |John        |2026-11-02|27000.0    |27000.0      |
+|O105   |C102      |John        |2026-11-05|24000.0    |51000.0      |
+|O104   |C103      |Priya       |2026-11-04|60000.0    |60000.0      |
++-------+----------+------------+----------+-----------+-------------+scala> spark.sql("""
+     | SELECT *
+     | FROM (
+     |     SELECT
+     |         orderId,
+     |         customerId,
+     |         customerName,
+     |         orderDate,
+     |         order_total,
+     |         ROW_NUMBER() OVER (
+     |             PARTITION BY customerId
+     |             ORDER BY order_total DESC
+     |         ) AS rn
+     |     FROM customer_orders_view
+     | ) ranked_orders
+     | WHERE rn = 2
+     | """).show(false)
++-------+----------+------------+----------+-----------+---+
+|orderId|customerId|customerName|orderDate |order_total|rn |
++-------+----------+------------+----------+-----------+---+
+|O106   |C101      |Raj         |2026-11-06|30000.0    |2  |
+|O105   |C102      |John        |2026-11-05|24000.0    |2  |
++-------+----------+------------+----------+-----------+---+
+
+
+scala>
