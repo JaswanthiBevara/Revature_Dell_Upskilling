@@ -1,0 +1,3 @@
+v1
+{"path":"file:///C:/Users/BRV%20GOWTHAM/capstone-streaming/output/parquet/clickstream_windows/part-00000-2da39541-6afb-48b6-ba08-0038bbe51ecc-c000.snappy.parquet","size":668,"isDir":false,"modificationTime":1794824276484,"blockReplication":1,"blockSize":33554432,"action":"add"}
+{"path":"file:///C:/Users/BRV%20GOWTHAM/capstone-streaming/output/parquet/clickstream_windows/part-00006-794d3bb4-62ca-4589-8cb5-6b7e27308e50-c000.snappy.parquet","size":1555,"isDir":false,"modificationTime":1794824278246,"blockReplication":1,"blockSize":33554432,"action":"add"}
