@@ -1,0 +1,180 @@
+ mkdir linkedin-member-analytics
+
+
+    Directory: C:\Users\BRV GOWTHAM
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        17-11-2026  07:12 PM                linkedin-member-analytics
+
+PS C:\Users\BRV GOWTHAM> cd "C:\Users\BRV GOWTHAM\linkedin-member-analytics"
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> $folders = @("docker","data","src\main\scala","output\post-wise","output\window-wise","checkpoints\post-wise","checkpoints\window-wise","screenshots","logs"); foreach ($folder in $folders) { New-Item -ItemType Directory -Force -Path $folder | Out-Null }
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> tree /F
+Folder PATH listing
+Volume serial number is 8868-E391
+C:.
+├───checkpoints
+│   ├───post-wise
+│   └───window-wise
+├───data
+├───docker
+├───logs
+├───output
+│   ├───post-wise
+│   └───window-wise
+├───screenshots
+└───src
+    └───main
+        └───scala
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics>
+
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> docker compose -f docker\docker-compose.yml up -d
+[+] Running 8/8
+ ✔ kafka-ui Pulled                                                                                                74.0s
+   ✔ 0ce1dd7918a4 Pull complete                                                                                    5.7s
+   ✔ 396900a6066f Pull complete                                                                                   61.3s
+   ✔ f86135b615e8 Pull complete                                                                                   61.6s
+   ✔ 7efc01291e39 Pull complete                                                                                   61.7s
+   ✔ 03798d644f93 Pull complete                                                                                   61.8s
+   ✔ 61256e5d038d Pull complete                                                                                   62.0s
+   ✔ 4f27eecc6d58 Pull complete                                                                                   64.8s
+[+] Running 4/4
+ ✔ Network docker_default               Created                                                                    0.6s
+ ✔ Volume "docker_linkedin-kafka-data"  Created                                                                    0.1s
+ ✔ Container linkedin-kafka             Started                                                                    3.2s
+ ✔ Container linkedin-kafka-ui          Started
+
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> docker ps --filter "name=linkedin"
+CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS          PORTS                              NAMES
+0f4ee2891020   provectuslabs/kafka-ui:latest   "/bin/sh -c 'java --…"   12 seconds ago   Up 9 seconds    0.0.0.0:8080->8080/tcp             linkedin-kafka-ui
+acd39e242894   apache/kafka:latest             "/__cacert_entrypoin…"   12 seconds ago   Up 11 seconds   9092/tcp, 0.0.0.0:9093->9093/tcp   linkedin-kafka
+
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> docker exec linkedin-kafka /opt/kafka/bin/kafka-topics.sh --create --topic linkedin-events --bootstrap-server localhost:9093 --partitions 3 --replication-factor 1
+Created topic linkedin-events.
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics> docker exec linkedin-kafka /opt/kafka/bin/kafka-topics.sh --describe --topic linkedin-events --bootstrap-server localhost:9093
+Topic: linkedin-events  TopicId: mjUM1JY-TVOZGJKJVgkqHw PartitionCount: 3       ReplicationFactor: 1    Configs: min.insync.replicas=1
+        Topic: linkedin-events  Partition: 0    Leader: 1       Replicas: 1     Isr: 1  Elr:    LastKnownElr:
+        Topic: linkedin-events  Partition: 1    Leader: 1       Replicas: 1     Isr: 1  Elr:    LastKnownElr:
+        Topic: linkedin-events  Partition: 2    Leader: 1       Replicas: 1     Isr: 1  Elr:    LastKnownElr:
+
+ sbt clean compile
+[info] welcome to sbt 1.9.9 (Eclipse Adoptium Java 17.0.21)
+[info] loading settings for project global-plugins from idea-structure17379969338229898348.sbt ...
+[info] loading global plugins from C:\Users\BRV GOWTHAM\.sbt\1.0\plugins
+[info] loading project definition from C:\Users\BRV GOWTHAM\linkedin-member-analytics\project
+[info] loading settings for project root from build.sbt ...
+[info] set current project to linkedin-member-analytics (in build file:/C:/Users/BRV%20GOWTHAM/linkedin-member-analytics/)
+[info] Executing in batch mode. For better performance use sbt's shell
+[success] Total time: 2 s, completed 17-Nov-2026, 8:23:18 pm
+[info] compiling 1 Scala source to C:\Users\BRV GOWTHAM\linkedin-member-analytics\target\scala-2.12\classes ...
+[success] Total time: 22 s, completed 17-Nov-2026, 8:23:41 pm
+←[0J
+
+PS C:\Users\BRV GOWTHAM\linkedin-member-analytics>
+
+
+. Important to know deleting temp checkpoint folder is best effort.
+[error] 26/11/17 20:25:11 WARN ResolveWriteToStream: spark.sql.adaptive.enabled is not supported in streaming DataFrames/Datasets and will be disabled.
+[error] 26/11/17 20:25:14 WARN AdminClientConfig: These configurations '[key.deserializer, value.deserializer, enable.auto.commit, max.poll.records, auto.offset.reset]' were supplied but are not used yet.
+[info] -------------------------------------------
+[info] Batch: 0
+[info] -------------------------------------------
+[info] +-------+--------+------+------------------+-------------------+
+[info] |eventId|memberId|postId|eventType         |eventTime          |
+[info] +-------+--------+------+------------------+-------------------+
+[info] |e001   |m101    |p1001 |view              |2026-11-17 15:30:05|
+[info] |e002   |m102    |p1001 |view              |2026-11-17 15:30:12|
+[info] |e003   |m101    |p1001 |like              |2026-11-17 15:30:20|
+[info] |e004   |m103    |p1001 |comment           |2026-11-17 15:30:35|
+[info] |e005   |m102    |p1002 |view              |2026-11-17 15:30:40|
+[info] |e006   |m104    |p1002 |like              |2026-11-17 15:30:50|
+[info] |e007   |m101    |p1002 |connection_request|2026-11-17 15:31:05|
+[info] |e008   |m103    |p1001 |view              |2026-11-17 15:31:15|
+[info] |e009   |m105    |p1001 |like              |2026-11-17 15:31:25|
+[info] |e010   |m102    |p1001 |comment           |2026-11-17 15:31:40|
+[info] |e011   |m106    |p1001 |view              |2026-11-17 15:32:10|
+[info] |e012   |m101    |p1001 |like              |2026-11-17 15:32:20|
+[info] |e013   |m107    |p1002 |comment           |2026-11-17 15:32:35|
+[info] |e014   |m104    |p1002 |view              |2026-11-17 15:32:45|
+[info] |e015   |m108    |p1003 |view              |2026-11-17 15:33:05|
+[info] |e016   |m109    |p1003 |like              |2026-11-17 15:33:15|
+[info] |e017   |m108    |p1003 |comment           |2026-11-17 15:33:25|
+[info] |e018   |m110    |p1002 |view              |2026-11-17 15:33:40|
+[info] |e019   |m103    |p1003 |connection_request|2026-11-17 15:34:05|
+[info] |e020   |m105    |p1001 |view              |2026-11-17 15:34:20|
+[info] +-------+--------+------+------------------+-------------------+
+[info] -------------------------------------------
+[info] Batch: 1
+[info] -------------------------------------------
+[info] +-------+--------+------+---------+-------------------+
+[info] |eventId|memberId|postId|eventType|eventTime          |
+[info] +-------+--------+------+---------+-------------------+
+[info] |e021   |m111    |p1001 |like     |2026-11-17 21:05:10|
+[info] +-------+--------+------+---------+-------------------+
+
+
+[error] 26/11/17 21:28:34 WARN AdminClientConfig: These configurations '[key.deserializer, value.deserializer, enable.auto.commit, max.poll.records, auto.offset.reset]' were supplied but are not used yet.
+[error] 26/11/17 21:28:34 WARN AdminClientConfig: These configurations '[key.deserializer, value.deserializer, enable.auto.commit, max.poll.records, auto.offset.reset]' were supplied but are not used yet.
+[info] -------------------------------------------
+[info] Batch: 0
+[info] -------------------------------------------
+[info] -------------------------------------------
+[info] Batch: 0
+[info] -------------------------------------------
+[info] +------+----------+----------+-------------+-------------+
+[info] |postId|totalViews|totalLikes|totalComments|uniqueMembers|
+[info] +------+----------+----------+-------------+-------------+
+[info] |p1001 |5         |4         |2            |6            |
+[info] |p1003 |1         |1         |1            |3            |
+[info] |p1002 |3         |1         |1            |5            |
+[info] +------+----------+----------+-------------+-------------+
+[info] +------------------------------------------+------+----------+----------+-------------+
+[info] |window                                    |postId|totalViews|totalLikes|totalComments|
+[info] +------------------------------------------+------+----------+----------+-------------+
+[info] |{2026-11-17 15:32:00, 2026-11-17 15:33:00}|p1002 |1         |0         |1            |
+[info] |{2026-11-17 15:33:00, 2026-11-17 15:34:00}|p1002 |1         |0         |0            |
+[info] |{2026-11-17 15:33:00, 2026-11-17 15:34:00}|p1003 |1         |1         |1            |
+[info] |{2026-11-17 15:34:00, 2026-11-17 15:35:00}|p1001 |1         |0         |0            |
+[info] |{2026-11-17 15:30:00, 2026-11-17 15:31:00}|p1002 |1         |1         |0            |
+[info] |{2026-11-17 15:32:00, 2026-11-17 15:33:00}|p1001 |1         |1         |0            |
+[info] |{2026-11-17 15:34:00, 2026-11-17 15:35:00}|p1003 |0         |0         |0            |
+[info] |{2026-11-17 21:05:00, 2026-11-17 21:06:00}|p1001 |0         |1         |0            |
+[info] |{2026-11-17 15:31:00, 2026-11-17 15:32:00}|p1001 |1         |1         |1            |
+[info] |{2026-11-17 15:31:00, 2026-11-17 15:32:00}|p1002 |0         |0         |0            |
+[info] |{2026-11-17 15:30:00, 2026-11-17 15:31:00}|p1001 |2         |1         |1            |
+[info] +------------------------------------------+------+----------+----------+-------------+
+[info] -------------------------------------------
+[info] Batch: 1
+[info] -------------------------------------------
+[info] +------+----------+----------+-------------+-------------+
+[info] |postId|totalViews|totalLikes|totalComments|uniqueMembers|
+[info] +------+----------+----------+-------------+-------------+
+[info] |p1001 |5         |4         |2            |6            |
+[info] |p1003 |1         |1         |1            |3            |
+[info] |p1002 |3         |1         |2            |6            |
+[info] +------+----------+----------+-------------+-------------+
+[info] -------------------------------------------
+[info] Batch: 1
+[info] -------------------------------------------
+[info] +------------------------------------------+------+----------+----------+-------------+
+[info] |window                                    |postId|totalViews|totalLikes|totalComments|
+[info] +------------------------------------------+------+----------+----------+-------------+
+[info] |{2026-11-17 15:32:00, 2026-11-17 15:33:00}|p1002 |1         |0         |1            |
+[info] |{2026-11-18 03:01:00, 2026-11-18 03:02:00}|p1002 |0         |0         |1            |
+[info] |{2026-11-17 15:33:00, 2026-11-17 15:34:00}|p1002 |1         |0         |0            |
+[info] |{2026-11-17 15:33:00, 2026-11-17 15:34:00}|p1003 |1         |1         |1            |
+[info] |{2026-11-17 15:34:00, 2026-11-17 15:35:00}|p1001 |1         |0         |0            |
+[info] |{2026-11-17 15:30:00, 2026-11-17 15:31:00}|p1002 |1         |1         |0            |
+[info] |{2026-11-17 15:32:00, 2026-11-17 15:33:00}|p1001 |1         |1         |0            |
+[info] |{2026-11-17 15:34:00, 2026-11-17 15:35:00}|p1003 |0         |0         |0            |
+[info] |{2026-11-17 21:05:00, 2026-11-17 21:06:00}|p1001 |0         |1         |0            |
+[info] |{2026-11-17 15:31:00, 2026-11-17 15:32:00}|p1001 |1         |1         |1            |
+[info] |{2026-11-17 15:31:00, 2026-11-17 15:32:00}|p1002 |0         |0         |0            |
+[info] |{2026-11-17 15:30:00, 2026-11-17 15:31:00}|p1001 |2         |1         |1            |
+[info] +------------------------------------------+------+----------+----------+-------------+
+
+PS C:\Users\BRV GOWTHAM> docker exec -it linkedin-kafka /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9093 --topic linkedin-events
+>{"eventId":"e022","memberId":"m112","postId":"p1002","eventType":"comment","eventTime":"2026-11-17T21:31:10Z"}
+^C>
+PS C:\Users\BRV GOWTHAM>

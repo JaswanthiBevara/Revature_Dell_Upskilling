@@ -1,0 +1,2 @@
+order_id,customer_id,order_date,amount,operation,source_updated_at
+1007,C107,2026-11-18 16:00:00,3000.00,U,2026-11-18 17:30:00

@@ -1,0 +1,61 @@
+[0m[[0m[0mdebug[0m] [0m[0mPackaging C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\customerordersetl_2.13-1.0.0.jar ...[0m
+[0m[[0m[0mdebug[0m] [0m[0mInput file mappings:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\bronze[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\bronze[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\bronze\CustomerOrdersBronze$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\bronze\CustomerOrdersBronze$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\bronze\CustomerOrdersBronze.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\bronze\CustomerOrdersBronze.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\config[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\config[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\config\ETLConfig$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\config\ETLConfig$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\config\ETLConfig.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\config\ETLConfig.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\CustomerOrdersETL$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\CustomerOrdersETL$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\CustomerOrdersETL.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\CustomerOrdersETL.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\ingestion[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\ingestion[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\ingestion\CustomerOrdersIngestion$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\ingestion\CustomerOrdersIngestion$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\ingestion\CustomerOrdersIngestion.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\ingestion\CustomerOrdersIngestion.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\MigrateSilverSchema$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\MigrateSilverSchema$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\MigrateSilverSchema.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\MigrateSilverSchema.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\quarantine[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\quarantine[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\quarantine\CustomerOrdersQuarantine$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\quarantine\CustomerOrdersQuarantine$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\quarantine\CustomerOrdersQuarantine.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\quarantine\CustomerOrdersQuarantine.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\silver[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\silver[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\silver\CustomerOrdersSilver$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\silver\CustomerOrdersSilver$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\silver\CustomerOrdersSilver.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\silver\CustomerOrdersSilver.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\utils[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\utils[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\utils\DeltaTableOperations$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\utils\DeltaTableOperations$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\utils\DeltaTableOperations.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\utils\DeltaTableOperations.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\validation[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\validation[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\validation\CustomerOrdersValidation$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\validation\CustomerOrdersValidation$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\validation\CustomerOrdersValidation.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\validation\CustomerOrdersValidation.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\VerifyDeltaTables$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\VerifyDeltaTables$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com\customerorders\VerifyDeltaTables.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	  C:\Users\BRV GOWTHAM\IdeaProjects\CustomerOrdersETL\target\scala-2.13\classes\com\customerorders\VerifyDeltaTables.class[0m
+[0m[[0m[0mdebug[0m] [0m[0mDone packaging.[0m
